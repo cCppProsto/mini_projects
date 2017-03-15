@@ -1,4 +1,5 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    snow_c
+    snow_c \
+    paratrooper_c
