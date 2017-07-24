@@ -1,5 +1,5 @@
 #include <GL/gl.h>
-#include <GL/glaux.h>
+//#include <GL/glaux.h>
 #include <GL/glu.h>
 #include <glfw3.h>
 #include <math.h>

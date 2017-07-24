@@ -3,8 +3,8 @@
 #include <stdbool.h>
 #include "glfw3.h"
 #include <GL/gl.h>
-
-#include <conio.h>
+#include <GL/glut.h>
+#include "input_tools.h"
 
 #include "common.h"
 #include "menu.h"
@@ -38,8 +38,11 @@ void hard_menu_init(sMenu *, sMenuItem *);
 void options_menu_init(sMenu *, sMenuItem *);
 
 //------------------------------------------------------------------------------
-int main()
+int main(int argcp, char **argv)
 {
+  glutInit(&argcp, argv);
+
+
     if(gl_init() == -1)
         return 1;
 
@@ -110,117 +113,117 @@ void options_menu_init(sMenu *apMenu, sMenuItem *apItem)
 //--------------------------------------------------------------------
 void ascii_draw(sMenu *apMenu)
 {
-    system("cls");
-    sMenuItem *it = menu_first_item(apMenu);
-    do
-    {
-        if (menu_item_is_selected(apMenu, it))
-            printf("[%s]\n", it->value.str);
-        else
-            printf("%s\n", it->value.str);
-        it = menu_next_item(it);
-    } while (it != 0);
-    gAsciiRedraw = false;
+  it_clrscr();
+  sMenuItem *it = menu_first_item(apMenu);
+  do
+  {
+      if (menu_item_is_selected(apMenu, it))
+          printf("[%s]\n", it->value.str);
+      else
+          printf("%s\n", it->value.str);
+      it = menu_next_item(it);
+  } while (it != 0);
+  gAsciiRedraw = false;
 }
 //------------------------------------------------------------------------------
 int gl_init()
 {
-    if (!glfwInit())
-        return -1;
+  if (!glfwInit())
+      return -1;
 
-    window = glfwCreateWindow(SCREEN_WIDTH,
-                              SCREEN_HEIGHT,
-                              "menu",
-                              IS_FULL_SCREEN ? glfwGetPrimaryMonitor() : NULL,
-                              NULL);
+  window = glfwCreateWindow(SCREEN_WIDTH,
+                            SCREEN_HEIGHT,
+                            "menu",
+                            IS_FULL_SCREEN ? glfwGetPrimaryMonitor() : NULL,
+                            NULL);
 
-    glfwSetWindowPos(window,0,20);
-    if (!window)
-    {
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
+  glfwSetWindowPos(window,0,20);
+  if (!window)
+  {
+      glfwTerminate();
+      return -1;
+  }
+  glfwMakeContextCurrent(window);
 
-    glfwSetKeyCallback        (window, key_click_clb);
-    glfwSetWindowSizeCallback (window, resize_clb);
-    //glfwSetMouseButtonCallback(window, mouse_click_clb);
+  glfwSetKeyCallback        (window, key_click_clb);
+  glfwSetWindowSizeCallback (window, resize_clb);
+  //glfwSetMouseButtonCallback(window, mouse_click_clb);
 
-    glViewport(0, 0, (GLsizei)SCREEN_WIDTH, (GLsizei)SCREEN_HEIGHT);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 1);
-    glfwSwapInterval(1);
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glEnable(GL_LINE_SMOOTH);
-    glEnable(GL_POINT_SMOOTH);
+  glViewport(0, 0, (GLsizei)SCREEN_WIDTH, (GLsizei)SCREEN_HEIGHT);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glOrtho(0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 1);
+  glfwSwapInterval(1);
+  glDisable(GL_DEPTH_TEST);
+  glEnable(GL_BLEND);
+  glEnable(GL_LINE_SMOOTH);
+  glEnable(GL_POINT_SMOOTH);
 
-    glPointSize(1);
-    glLineWidth(1);
+  glPointSize(1);
+  glLineWidth(1);
 
-    return 1;
+  return 1;
 }
 //------------------------------------------------------------------------------
 void resize_clb(GLFWwindow *apWindow, int aWidth, int aHeight)
 {
-    glViewport(0, 0, aWidth, aHeight);
+  glViewport(0, 0, aWidth, aHeight);
 }
 //------------------------------------------------------------------------------
 void key_click_clb(GLFWwindow *apWindow, int aKey, int aScanCode, int aAction, int aMods)
 {
-    if(aAction == GLFW_PRESS || aAction == GLFW_REPEAT)
+  if(aAction == GLFW_PRESS || aAction == GLFW_REPEAT)
+  {
+    switch(aKey)
     {
-        switch(aKey)
+      case GLFW_KEY_ENTER:
+      {
+        sMenu *tmp = menu_sub_enter(gMenu);
+        if (tmp != gMenu)
+          gMenu = tmp;
+        else
         {
-            case GLFW_KEY_ENTER:
-            {
-                sMenu *tmp = menu_sub_enter(gMenu);
-                if (tmp != gMenu)
-                    gMenu = tmp;
-                else
-                {
-                    if (menu_current_value(gMenu)->id == MENU_EXIT)
-                        glfwSetWindowShouldClose(apWindow, GL_TRUE);
-                }
-                gAsciiRedraw = true;
-                break;
-            }
-            case GLFW_KEY_ESCAPE:
-            {
-                gMenu = menu_sub_leave(gMenu);
-                gAsciiRedraw = true;
-                break;
-            }
-            case GLFW_KEY_UP:
-            {
-                if (!menu_select_prev(gMenu))
-                    menu_select_last(gMenu);
-
-                gAsciiRedraw = true;
-                break;
-            }
-            case GLFW_KEY_DOWN:
-            {
-                if (!menu_select_next(gMenu))
-                    menu_select_first(gMenu);
-
-                gAsciiRedraw = true;
-                break;
-            }
+          if (menu_current_value(gMenu)->id == MENU_EXIT)
+            glfwSetWindowShouldClose(apWindow, GL_TRUE);
         }
+        gAsciiRedraw = true;
+        break;
+      }
+      case GLFW_KEY_ESCAPE:
+      {
+        gMenu = menu_sub_leave(gMenu);
+        gAsciiRedraw = true;
+        break;
+      }
+      case GLFW_KEY_UP:
+      {
+        if (!menu_select_prev(gMenu))
+          menu_select_last(gMenu);
+
+        gAsciiRedraw = true;
+        break;
+      }
+      case GLFW_KEY_DOWN:
+      {
+        if (!menu_select_next(gMenu))
+          menu_select_first(gMenu);
+
+        gAsciiRedraw = true;
+        break;
+      }
     }
+  }
 }
 //------------------------------------------------------------------------------
 void opengl_draw()
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
 
-    gl_menu_draw(gMenu);
+  gl_menu_draw(gMenu);
 
-    glfwSwapBuffers(window);
-    glfwPollEvents();
+  glfwSwapBuffers(window);
+  glfwPollEvents();
 }
 
